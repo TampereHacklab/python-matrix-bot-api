@@ -9,6 +9,11 @@ Examples
 --------
 See [example_bot.py](https://github.com/shawnanastasio/python-matrix-bot-api/blob/master/example_bot.py).
 
+Simple modular bot
+------------------
+Can be used as is for implementing your own bot commands.
+
+See [modular_bot.py](https://github.com/shawnanastasio/python-matrix-bot-api/blob/master/modular_bot/modular_bot.py).
 
 Contributing
 ------------
