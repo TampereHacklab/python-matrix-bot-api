@@ -1,5 +1,5 @@
 """
-A super simple modular bot using the Python Matrix Bot API
+A simple modular bot using the Python Matrix Bot API
 
 Test it out by adding it to a group chat and say:
 !echo this is a test!
@@ -20,6 +20,12 @@ Run the bot like this, from modular_bot directory:
 MATRIX_USERNAME="@username:matrix.org" MATRIX_PASSWORD="password" MATRIX_SERVER="https://matrix.org" PYTHONPATH=.. python3 modular_bot.py
 
 All commands can be listed with !help command.
+
+To simulate bot in console (without matrix user):
+
+SIMULATE=yes PYTHONPATH=.. python3 modular_bot.py
+
+Some things won't work when simulating.
 """
 
 import random
@@ -39,6 +45,21 @@ from matrix_bot_api.mcommand_handler import MCommandHandler
 # callbacks otherwise. 
 bot = None
 
+class FakeRoom:
+    def send_text(self, text):
+        print("<bot> " + text)
+    def send_image(self, mxc, text):
+        print("Image: ", mxc, text)
+
+class FakeClient:
+    def upload(self, data, type):
+        mxc = "mxc:666"
+        print("(Fake uploading ", len(data), " bytes of data, type ", type, " as mxc" + mxc + ")")
+        return mxc
+
+class FakeBot:
+    client = FakeClient()
+
 # Stop bot on ctrl-c
 def signal_handler(sig, frame):
     bot.running = False
@@ -47,6 +68,9 @@ def modular_callback(room, event):
     global bot
 
     # Figure out the command
+    body = event['content']['body']
+    if len(body) == 0:
+        return
     command = event['content']['body'].split().pop(0)
 
     # Strip away non-alphanumeric characters, including leading ! for security
@@ -68,10 +92,17 @@ def load_module(modulename):
     cls = getattr(module, 'MatrixModule')
     return cls()
 
-def main():
-    global bot
-
+def load_modules():
     modulefiles = glob.glob('./modules/*.py')
+    modules = dict()
+    for modulefile in modulefiles:
+        modulename = os.path.splitext(os.path.basename(modulefile))[0]
+        moduleobject = load_module(modulename)
+        modules[modulename] = moduleobject
+    return modules
+
+def run_bot(modules):
+    global bot
 
     # Create an instance of the MatrixBotAPI
     bot = MatrixBotAPI(os.environ['MATRIX_USERNAME'], os.environ['MATRIX_PASSWORD'], os.environ['MATRIX_SERVER'])
@@ -79,12 +110,6 @@ def main():
     # Add a handler waiting for any command
     modular_handler = MCommandHandler("", modular_callback)
     bot.add_handler(modular_handler)
-
-    modules = dict()
-    for modulefile in modulefiles:
-        modulename = os.path.splitext(os.path.basename(modulefile))[0]
-        moduleobject = load_module(modulename)
-        modules[modulename] = moduleobject
 
     # Store modules in bot to be accessible from other modules
     bot.modules = modules
@@ -113,6 +138,32 @@ def main():
         except AttributeError:
             pass
 
+def simulate_bot(modules):
+    global bot
+    bot =  FakeBot()
+    bot.modules = modules
+    room = FakeRoom()
+    event = dict()
+    event['content'] = dict()
+    event['sender'] = "@console:matrix.org"
+    for modulename, moduleobject in modules.items():
+        try:
+            moduleobject.matrix_start(bot)
+        except AttributeError:
+            pass
+    line = ''
+    while(line != 'quit'):
+        line = input(" > ")
+        event['content']['body'] = line
+        modular_callback(room, event)
+
+def main():
+    modules = load_modules()
+
+    if(os.getenv("SIMULATE") is None):
+        run_bot(modules)
+    else:
+        simulate_bot(modules)
 
 if __name__ == "__main__":
     main()
