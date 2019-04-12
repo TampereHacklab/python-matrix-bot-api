@@ -1,0 +1,19 @@
+version: '3'
+
+networks:
+  default:
+    external:
+      name: tamperehacklab
+
+services:
+  matrix_bot:
+    container_name: matrixbot
+    image: 'matrixbot:latest'
+    build: '.'
+    networks:
+      - default
+    environment:
+      - MATRIX_USERNAME
+      - MATRIX_PASSWORD
+      - MATRIX_SERVER
+
