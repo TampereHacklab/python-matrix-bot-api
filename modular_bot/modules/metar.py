@@ -12,6 +12,8 @@ class MatrixModule:
             metar_url = "https://tgftp.nws.noaa.gov/data/observations/metar/stations/" + icao.upper() + ".TXT"
             response = urllib.request.urlopen(metar_url)
             lines = response.readlines()
-            room.send_text(lines[1].decode("utf-8"))
+            room.send_text(lines[1].decode("utf-8").strip())
         else:
             room.send_text('Usage: !metar <icao code>')
+    def help(self):
+        return('Metar data access (usage: !metar <icao code>)')

@@ -7,3 +7,5 @@ class MatrixModule:
 
         # Echo what they said back
         room.send_text(' '.join(args))
+    def help(self):
+        return('Echoes back what user has said')

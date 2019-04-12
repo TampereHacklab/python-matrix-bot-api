@@ -10,3 +10,6 @@ class MatrixModule:
 
     def matrix_stop(self, bot):
         pass
+
+    def help(self):
+        return('Tells how many seconds the bot has been up.')

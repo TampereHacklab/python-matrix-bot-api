@@ -17,5 +17,8 @@ class MatrixModule:
 
         subprocess.run(['ffmpeg', '-f', 'MJPEG', '-y', '-i', mjpeg_url, '-r', '1', '-vframes', '1', '-q:v', '1', '/tmp/snapshot.jpg'], check=True, timeout=5)
         mxc = bot.client.upload(open(filename, "rb").read(), 'image/jpeg')
-        room.send_image(mxc, 'webcam.jpg')
+        room.send_image(mxc, 'Tampere Hacklab Webcam')
         os.remove(filename)
+
+    def help(self):
+        return('Tampere hacklab webcam. Usage: !webcam [position], where position is number of programmed camera position.')
