@@ -25,6 +25,7 @@ All commands can be listed with !help command.
 import random
 import importlib
 import sys
+import traceback
 import re
 import os
 import glob
@@ -60,7 +61,7 @@ def modular_callback(room, event):
             moduleobject.matrix_callback(bot, room, event)
         except:
             room.send_text(event['sender'] + ', plugin for command ' + command + ' caused an exception: ' + str(sys.exc_info()[0]))
-            print(sys.exc_info()[0])
+            traceback.print_exc(file=sys.stderr)
 
 def load_module(modulename):
     module = importlib.import_module('modules.' + modulename)
