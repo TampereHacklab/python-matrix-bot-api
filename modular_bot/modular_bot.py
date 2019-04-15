@@ -152,6 +152,7 @@ def simulate_bot(modules):
         except AttributeError:
             pass
     line = ''
+    print('Simulating bot. Say quit to quit.')
     while(line != 'quit'):
         line = input(" > ")
         event['content']['body'] = line
