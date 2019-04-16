@@ -15,6 +15,9 @@ matrix_start(self, bot) and matrix_stop(self, bot) functions.
 
 See uptime.py for example.
 
+Modules that want to poll stuff can use matrix_poll() function
+which is called every 10 seconds.
+
 Run the bot like this, from modular_bot directory:
 
 MATRIX_USERNAME="@username:matrix.org" MATRIX_PASSWORD="password" MATRIX_SERVER="https://matrix.org" PYTHONPATH=.. python3 modular_bot.py
@@ -56,9 +59,12 @@ class FakeClient:
         mxc = "mxc:666"
         print("(Fake uploading ", len(data), " bytes of data, type ", type, " as mxc" + mxc + ")")
         return mxc
+    def get_rooms(self):
+        return dict()
 
 class FakeBot:
     client = FakeClient()
+    running = True
 
 # Stop bot on ctrl-c
 def signal_handler(sig, frame):
@@ -128,8 +134,15 @@ def run_bot(modules):
     signal.signal(signal.SIGINT, signal_handler)
     print('Bot running, press Ctrl-C to quit..')
     # Wait until ctrl-c is pressed
+    pollcount = 0
     while bot.running:
-        time.sleep(0.3)
+        for modulename, moduleobject in modules.items():
+            try:
+                moduleobject.matrix_poll(bot, pollcount)
+            except AttributeError:
+                pass
+        time.sleep(10)
+        pollcount = pollcount + 1
 
     # Call matrix_stop on each module
     for modulename, moduleobject in modules.items():
@@ -150,13 +163,33 @@ def simulate_bot(modules):
         try:
             moduleobject.matrix_start(bot)
         except AttributeError:
+            print('Startup of ', modulename, ' failed')
+            traceback.print_exc(file=sys.stderr)
             pass
     line = ''
     print('Simulating bot. Say quit to quit.')
-    while(line != 'quit'):
-        line = input(" > ")
-        event['content']['body'] = line
-        modular_callback(room, event)
+    pollcount = 0
+    while(bot.running):
+        if(line == 'quit'):
+            bot.running = False
+        else:
+            line = input(" > ")
+            event['content']['body'] = line
+            modular_callback(room, event)
+
+            for modulename, moduleobject in modules.items():
+                try:
+                    moduleobject.matrix_poll(bot, pollcount)
+                except AttributeError:
+                    pass
+            pollcount = pollcount + 1
+
+    # Call matrix_stop on each module
+    for modulename, moduleobject in modules.items():
+        try:
+            moduleobject.matrix_stop(bot)
+        except AttributeError:
+            pass
 
 def main():
     modules = load_modules()
