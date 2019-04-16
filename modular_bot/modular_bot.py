@@ -94,9 +94,14 @@ def modular_callback(room, event):
             traceback.print_exc(file=sys.stderr)
 
 def load_module(modulename):
-    module = importlib.import_module('modules.' + modulename)
-    cls = getattr(module, 'MatrixModule')
-    return cls()
+    try:
+        module = importlib.import_module('modules.' + modulename)
+        cls = getattr(module, 'MatrixModule')
+        return cls()
+    except ModuleNotFoundError:
+        print('Module ', modulename, ' failed to load!')
+        traceback.print_exc(file=sys.stderr)
+        return None
 
 def load_modules():
     modulefiles = glob.glob('./modules/*.py')
@@ -104,7 +109,8 @@ def load_modules():
     for modulefile in modulefiles:
         modulename = os.path.splitext(os.path.basename(modulefile))[0]
         moduleobject = load_module(modulename)
-        modules[modulename] = moduleobject
+        if moduleobject:
+            modules[modulename] = moduleobject
     return modules
 
 def run_bot(modules):
