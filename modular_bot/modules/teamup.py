@@ -28,6 +28,7 @@ class MatrixModule:
             calendar = Calendar(calendardef[0], self.api_key)
             calendar.timestamp = int(time.time())
             calendar.notifyroom = '#' + calendardef[1]
+#            print("Added cal", calendardef[0], calendar.notifyroom)
             self.calendars.append(calendar)
             
         self.bot = bot
@@ -67,7 +68,8 @@ class MatrixModule:
                 s = s + ' ' + startdt.strftime("%H:%M") + ' (' + str(event['duration']) + ' min)'
         return s
 
-    def send_notification(self, notification, room):
+    def send_notification(self, notification, notifyroom):
+#        print("Sending to", notifyroom, notification)
         for id, room in self.bot.client.get_rooms().items():
-            if room in room.aliases:
+            if notifyroom in room.aliases:
                 room.send_text(notification)
