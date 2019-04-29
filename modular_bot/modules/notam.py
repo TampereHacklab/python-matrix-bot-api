@@ -15,7 +15,7 @@ class MatrixModule:
                 notam_url = "https://www.ais.fi/ais/bulletins/envfra.htm"
             else:
                 notam_url = "https://www.ais.fi/ais/bulletins/envfrm.htm"
-            print(notam_url)
+
             response = urllib.request.urlopen(notam_url)
             lines = response.readlines()
             lines = b''.join(lines)
