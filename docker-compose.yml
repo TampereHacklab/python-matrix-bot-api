@@ -17,6 +17,5 @@ services:
       - MATRIX_PASSWORD
       - MATRIX_SERVER
       - TU_APIKEY
-      - TU_CALENDARID
-      - TU_NOTIFYROOM
+      - TU_CALENDARS
 

@@ -12,7 +12,7 @@ import os
 # TU_APIKEY - api key to use
 # TU_CALENDARS - list of calendar id's and rooms to notify about them
 #
-# Example: TU_CALENDARS="123abcdefg=#example:matrix.org,987asdfg=#other:matrix.org"
+# Example: TU_CALENDARS="123abcdefg#example:matrix.org,987asdfg#other:matrix.org"
 #
 
 class MatrixModule:
@@ -24,10 +24,10 @@ class MatrixModule:
         calendars = os.getenv("TU_CALENDARS").split(',')
 
         for calendarstring in calendars:
-            calendardef = calendarstring.split('=')
+            calendardef = calendarstring.split('#')
             calendar = Calendar(calendardef[0], self.api_key)
             calendar.timestamp = int(time.time())
-            calendar.notifyroom = calendardef[1]
+            calendar.notifyroom = '#' + calendardef[1]
             self.calendars.append(calendar)
             
         self.bot = bot
