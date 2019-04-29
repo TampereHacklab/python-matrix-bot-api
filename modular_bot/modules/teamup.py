@@ -8,7 +8,11 @@ import os
 # TeamUp calendar notifications
 #
 # Set env variables:
-# TU_APIKEY TU_CALENDARID TU_NOTIFYROOM (last is the room to notify)
+#
+# TU_APIKEY - api key to use
+# TU_CALENDARS - list of calendar id's and rooms to notify about them
+#
+# Example: TU_CALENDARS="123abcdefg=#example:matrix.org,987asdfg=#other:matrix.org"
 #
 
 class MatrixModule:
@@ -16,28 +20,34 @@ class MatrixModule:
         if os.getenv("TU_APIKEY") is None:
             return
         self.api_key = os.getenv("TU_APIKEY")
-        self.calendar_id = os.getenv("TU_CALENDARID")
-        self.notify_room = os.getenv("TU_NOTIFYROOM")
+        self.calendars = []
+        calendars = os.getenv("TU_CALENDARS").split(',')
 
-        self.calendar = Calendar(self.calendar_id, self.api_key)
-        self.timestamp = int(time.time())
+        for calendarstring in calendars:
+            calendardef = calendarstring.split('=')
+            calendar = Calendar(calendardef[0], self.api_key)
+            calendar.timestamp = int(time.time())
+            calendar.notifyroom = calendardef[1]
+            self.calendars.append(calendar)
+            
         self.bot = bot
 
     def matrix_poll(self, bot, pollcount):
         if not self.api_key:
             return
         if pollcount & 6 == 0: # Poll every 1 min
-            events = self.poll_server()
-            for event in events:
-                self.send_notification('Calendar: ' + self.eventToString(event))
+            for calendar in self.calendars:
+                events,timestamp = self.poll_server(calendar)
+                calendar.timestamp = timestamp
+                for event in events:
+                    self.send_notification('Calendar: ' + self.eventToString(event), calendar.notifyroom)
 
     def help(self):
         return('Polls teamup calendar. No command line usage.')
 
-    def poll_server(self):
-        events, timestamp = self.calendar.get_changed_events(self.timestamp)
-        self.timestamp = timestamp
-        return events
+    def poll_server(self, calendar):
+        events, timestamp = calendar.get_changed_events(calendar.timestamp)
+        return events, timestamp
 
     def to_datetime(self, dts):
         try:
@@ -57,7 +67,7 @@ class MatrixModule:
                 s = s + ' ' + startdt.strftime("%H:%M") + ' (' + str(event['duration']) + ' min)'
         return s
 
-    def send_notification(self, notification):
+    def send_notification(self, notification, room):
         for id, room in self.bot.client.get_rooms().items():
-            if self.notify_room in room.aliases:
+            if room in room.aliases:
                 room.send_text(notification)
