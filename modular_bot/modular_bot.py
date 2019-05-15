@@ -147,6 +147,9 @@ def run_bot(modules):
                 moduleobject.matrix_poll(bot, pollcount)
             except AttributeError:
                 pass
+            except:
+                print('Polling module', modulename, 'failed:')
+                traceback.print_exc(file=sys.stderr)
         time.sleep(10)
         pollcount = pollcount + 1
 
