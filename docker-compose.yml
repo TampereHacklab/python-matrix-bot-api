@@ -10,6 +10,12 @@ services:
     container_name: matrixbot
     image: 'matrixbot:latest'
     build: '.'
+    deploy:
+      restart_policy:
+        condition: always
+        delay: 5s
+        max_attempts: 3
+        window: 120s
     networks:
       - default
     environment:
@@ -18,4 +24,3 @@ services:
       - MATRIX_SERVER
       - TU_APIKEY
       - TU_CALENDARS
-
