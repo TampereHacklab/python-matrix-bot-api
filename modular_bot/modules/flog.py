@@ -19,10 +19,10 @@ import datetime
 class MatrixModule:
     def matrix_start(self, bot):
         self.default_field = os.getenv("FLOG_DEFAULT_FIELD")
-
-        if os.getenv("FLOG_LIVE_ROOM") is None:
-            return
+        print("flog default field is", self.default_field)
         self.live_room = os.getenv("FLOG_LIVE_ROOM")
+        if os.getenv("FLOG_LIVE_ROOM"):
+            print("flog live room is", self.live_room)
         self.bot = bot
         self.logged_flights_count = 0
         self.logged_flights_date = ""
@@ -82,10 +82,7 @@ class MatrixModule:
                         if sortie["ldg"]["loc"] != sortie["tkof"]["loc"]:
                             sortie["tkof"]["time"] = sortie["tkof"]["time"] + "(" + sortie["tkof"]["loc"] + ")"
                             sortie["ldg"]["time"] = sortie["ldg"]["time"] + "(" + sortie["ldg"]["loc"] + ") "
-                    if sortie["cs"] == "-":
-                        sortie["cs"] = ""
-                    if sortie["cn"] == "-":
-                        sortie["cn"] = "?"
+
                     out = out + sortie["tkof"]["time"] + sortie["ldg"]["time"] + " " + sortie["dt"] + " " + str(sortie["dalt"]) + "m " + self.glider2string(sortie) + "\n"
             
         room.send_text(out)
@@ -108,6 +105,11 @@ class MatrixModule:
         actype = sortie["actype"]
         cs = sortie["cs"]
         cn = sortie["cn"]
+        if cs == "-":
+            cs = ""
+        if cn == "-":
+            cn = ""
+
         if actype == "" and cs == "" and cn == "":
             return "????"
         return (actype + " " + cs + " " + cn).strip()
