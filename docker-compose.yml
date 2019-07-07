@@ -19,3 +19,5 @@ services:
       - MATRIX_SERVER
       - TU_APIKEY
       - TU_CALENDARS
+      - FLOG_LIVE_ROOM
+      - FLOG_DEFAULT_FIELD

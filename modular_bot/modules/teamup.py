@@ -36,12 +36,12 @@ class MatrixModule:
     def matrix_poll(self, bot, pollcount):
         if not self.api_key:
             return
-        if pollcount & 6 == 0: # Poll every 1 min
+        if pollcount % (6 * 5) == 0: # Poll every 5 min
             for calendar in self.calendars:
                 events,timestamp = self.poll_server(calendar)
                 calendar.timestamp = timestamp
                 for event in events:
-                    self.send_notification('Calendar: ' + self.eventToString(event), calendar.notifyroom)
+                    bot.send_notification('Calendar: ' + self.eventToString(event), calendar.notifyroom)
 
     def help(self):
         return('Polls teamup calendar. No command line usage.')
@@ -67,9 +67,3 @@ class MatrixModule:
             if not event['all_day']:
                 s = s + ' ' + startdt.strftime("%H:%M") + ' (' + str(event['duration']) + ' min)'
         return s
-
-    def send_notification(self, notification, notifyroom):
-#        print("Sending to", notifyroom, notification)
-        for id, room in self.bot.client.get_rooms().items():
-            if notifyroom in room.aliases:
-                room.send_text(notification)

@@ -40,6 +40,7 @@ import os
 import glob
 import signal
 import time
+import types
 from matrix_bot_api.matrix_bot_api import MatrixBotAPI
 from matrix_bot_api.mregex_handler import MRegexHandler
 from matrix_bot_api.mcommand_handler import MCommandHandler
@@ -65,6 +66,8 @@ class FakeClient:
 class FakeBot:
     client = FakeClient()
     running = True
+    def send_notification(self, notification, notifyroom):
+        print("Sending to ", notifyroom, ": ", notification)
 
 # Stop bot on ctrl-c
 def signal_handler(sig, frame):
@@ -118,6 +121,14 @@ def run_bot(modules):
 
     # Create an instance of the MatrixBotAPI
     bot = MatrixBotAPI(os.environ['MATRIX_USERNAME'], os.environ['MATRIX_PASSWORD'], os.environ['MATRIX_SERVER'])
+    # Add some helper functions:
+    # Sends a message to notifyroom
+    def send_notification(self, notification, notifyroom):
+        for id, room in bot.client.get_rooms().items():
+            if notifyroom in room.aliases:
+                room.send_text(notification)
+
+    bot.send_notification = types.MethodType(send_notification, bot)
 
     # Add a handler waiting for any command
     modular_handler = MCommandHandler("", modular_callback)
@@ -162,7 +173,7 @@ def run_bot(modules):
 
 def simulate_bot(modules):
     global bot
-    bot =  FakeBot()
+    bot = FakeBot()
     bot.modules = modules
     room = FakeRoom()
     event = dict()
@@ -172,8 +183,8 @@ def simulate_bot(modules):
         try:
             moduleobject.matrix_start(bot)
         except AttributeError:
-            print('Startup of ', modulename, ' failed')
-            traceback.print_exc(file=sys.stderr)
+            print('matrix_start() not implemented for', modulename)
+#            traceback.print_exc(file=sys.stderr)
             pass
     line = ''
     print('Simulating bot. Say quit to quit.')
