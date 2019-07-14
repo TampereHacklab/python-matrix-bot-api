@@ -24,7 +24,7 @@ class MatrixModule:
         if os.getenv("FLOG_LIVE_ROOM"):
             print("flog live room is", self.live_room)
         self.bot = bot
-        self.logged_flights_count = 0
+        self.logged_flights = []
         self.logged_flights_date = ""
 
     def matrix_poll(self, bot, pollcount):
@@ -36,7 +36,7 @@ class MatrixModule:
 
             # Date changed - reset flight count
             if data["begin_date"] != self.logged_flights_date:
-                self.logged_flights_count = 0
+                self.logged_flights = []
                 self.logged_flights_date = data["begin_date"]
 
             flights = []
@@ -52,11 +52,13 @@ class MatrixModule:
                                 "landing": sortie["ldg"]["time"],
                                 "duration": sortie["dt"],
                                 "glider": self.glider2string(sortie),
-                                "altitude": str(sortie["dalt"])
+                                "altitude": str(sortie["dalt"]),
+                                "seq": sortie["seq"]
                             })
-            for flight in flights[self.logged_flights_count:]:
-                bot.send_notification(flight["takeoff"] + " - " + flight["landing"] + " (" + flight["duration"] + ") " + flight["altitude"] + "m " + flight["glider"], self.live_room)
-            self.logged_flights_count = len(flights)
+            for flight in flights:
+                if flight["seq"] not in self.logged_flights:
+                    bot.send_notification(flight["takeoff"] + "-" + flight["landing"] + " (" + flight["duration"] + ") - " + flight["altitude"] + "m " + flight["glider"], self.live_room)
+                    self.logged_flights.append(flight["seq"])
 
     def matrix_callback(self, bot, room, event):
         args = event['content']['body'].split()
