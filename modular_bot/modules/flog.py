@@ -31,7 +31,7 @@ class MatrixModule:
         if not self.live_room:
             return
 
-        if pollcount % (6 * 1) == 0: # Poll every 5 min
+        if pollcount % (6 * 5) == 0: # Poll every 5 min
             data = self.get_flights(self.default_field)
 
             # Date changed - reset flight count
