@@ -19,7 +19,6 @@ import datetime
 class MatrixModule:
     def matrix_start(self, bot):
         self.default_field = os.getenv("FLOG_DEFAULT_FIELD")
-        print("flog default field is", self.default_field)
         self.live_room = os.getenv("FLOG_LIVE_ROOM")
         if os.getenv("FLOG_LIVE_ROOM"):
             print("flog live room is", self.live_room)

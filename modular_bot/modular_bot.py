@@ -52,6 +52,8 @@ bot = None
 class FakeRoom:
     def send_text(self, text):
         print("<bot> " + text)
+    def send_html(self, text):
+        print("<bot (html)> " + text)
     def send_image(self, mxc, text):
         print("Image: ", mxc, text)
 
