@@ -21,3 +21,5 @@ services:
       - TU_CALENDARS
       - FLOG_LIVE_ROOM
       - FLOG_DEFAULT_FIELD
+      - GCAL_CREDENTIALS
+      - GCAL_LIVE_ROOM

@@ -70,6 +70,9 @@ class FakeBot:
     running = True
     def send_notification(self, notification, notifyroom):
         print("Sending to ", notifyroom, ": ", notification)
+    def get_room(self, room_id):
+        print('Fake look up room ', room_id, '...')
+        return FakeRoom()
 
 # Stop bot on ctrl-c
 def signal_handler(sig, frame):
@@ -126,11 +129,19 @@ def run_bot(modules):
     # Add some helper functions:
     # Sends a message to notifyroom
     def send_notification(self, notification, notifyroom):
+        room = self.get_room(notifyroom)
+        room.send_text(notification)
+
+    # Lookup room object for room id. Bot must be present in room.
+    def get_room(self, room_id):
+        print('Looking up room ', room_id, '...')
         for id, room in bot.client.get_rooms().items():
-            if notifyroom in room.aliases:
-                room.send_text(notification)
+            if room_id in room.aliases:
+                return room
+        print('Error finding room', room_id, ' - is bot present on it?')
 
     bot.send_notification = types.MethodType(send_notification, bot)
+    bot.get_room = types.MethodType(get_room, bot)
 
     # Add a handler waiting for any command
     modular_handler = MCommandHandler("", modular_callback)
@@ -139,6 +150,7 @@ def run_bot(modules):
     # Store modules in bot to be accessible from other modules
     bot.modules = modules
 
+    print('Starting modules..')
     # Call matrix_start on each module
     for modulename, moduleobject in modules.items():
         try:
@@ -203,7 +215,8 @@ def simulate_bot(modules):
                 try:
                     moduleobject.matrix_poll(bot, pollcount)
                 except AttributeError:
-                    pass
+                    traceback.print_exc(file=sys.stderr)
+
             pollcount = pollcount + 1
 
     # Call matrix_stop on each module

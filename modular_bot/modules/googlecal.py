@@ -15,21 +15,31 @@ import os
 #
 # Google calendar notifications
 #
+# Note: Provide a token.pickle file for the service. 
+# It's created on first run (run from console!) and 
+# can be copied to another computer.
+#
 # ENV variables:
 #
-# Google calendar creds file:
-# GCAL_CREDENTIALS="credentials.json" 
+# Google calendar creds file: (defaults to this)
+# GCAL_CREDENTIALS="credentials.json"
+#
+# Room to deliver daily reports:
+# GCAL_LIVE_ROOM="#room:matrix.org"
+#  
 #
 
 class MatrixModule:
-
     def matrix_start(self, bot):
         self.bot = bot
         self.SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
-        self.credentials_file = os.getenv("GCAL_CREDENTIALS")
+        self.credentials_file = "credentials.json"
+        if os.getenv("GCAL_CREDENTIALS"):
+            self.credentials_file = os.getenv("GCAL_CREDENTIALS")
+        self.live_room = os.getenv("GCAL_LIVE_ROOM")
         self.service = None
-        if not self.credentials_file:
-            return
+        self.reportTime = 10
+        self.lastReportDate = None
 
         creds = None
 
@@ -56,28 +66,65 @@ class MatrixModule:
             room.send_text('Google calendar not set up for this bot.')
             return
         args = event['content']['body'].split()
+        events = []
 
-        now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-        events_result = self.service.events().list(calendarId='primary', timeMin=now,
-                                            maxResults=10, singleEvents=True,
-                                            orderBy='startTime').execute()
-        events = events_result.get('items', [])
+        if len(args) == 2:
+            if args[1] == 'today':
+                events = self.list_today()
+        else:
+            events = self.list_upcoming()
 
         if not events:
-            room.send_text('No upcoming events found.')
+            room.send_text('No events found.')
+        self.send_events(events, room)
+
+    def send_events(self, events, room):
         for event in events:
             start = event['start'].get('dateTime', event['start'].get('date'))
             room.send_html(self.parseDate(start) + " <a href=\"" + event['htmlLink'] + "\">" + event['summary'] + "</a>")
 
+    def list_upcoming(self):
+        startTime = datetime.datetime.utcnow()
+        now = startTime.isoformat() + 'Z'
+        events_result = self.service.events().list(calendarId='primary', timeMin=now,
+                                            maxResults=10, singleEvents=True,
+                                            orderBy='startTime').execute()
+        events = events_result.get('items', [])
+        return events
+
+    def list_today(self):
+        startTime = datetime.datetime.utcnow()
+        startTime = startTime - datetime.timedelta(hours=startTime.hour, minutes=startTime.minute)
+        endTime = startTime + datetime.timedelta(hours=24)
+        now = startTime.isoformat() + 'Z'
+        end = endTime.isoformat() + 'Z'
+        events_result = self.service.events().list(calendarId='primary', timeMin=now,
+                                                    timeMax=end, maxResults=10, singleEvents=True,
+                                            orderBy='startTime').execute()
+        events = events_result.get('items', [])
+        return events
 
     def matrix_poll(self, bot, pollcount):
         if not self.service:
             return
+        if not self.live_room:
+            return
         if pollcount % (6 * 5) == 0: # Poll every 5 min
-            pass
+            pass # Not implemented
+        
+        today = datetime.datetime.now()
+        sinceLast = 999
+        if self.lastReportDate:
+            sinceLast = (today - self.lastReportDate).hour
+        if sinceLast > 20 and today.hour >= self.reportTime:
+            self.lastReportDate = today
+            events = self.list_today()
+            room = bot.get_room(self.live_room)
+            self.send_events(events, room)
+
 
     def help(self):
-        return('Google calendar. No command line usage.')
+        return('Google calendar. Lists 10 next events by default. today = list today\'s events.')
 
     def parseDate(self, start):
         try: 
