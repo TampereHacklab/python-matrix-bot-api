@@ -38,7 +38,7 @@ class MatrixModule:
             self.credentials_file = os.getenv("GCAL_CREDENTIALS")
         self.live_room = os.getenv("GCAL_LIVE_ROOM")
         self.service = None
-        self.report_time = 10
+        self.report_time = 8
         self.last_report_date = None
 
         creds = None
