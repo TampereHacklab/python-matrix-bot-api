@@ -17,10 +17,14 @@ import os
 
 class MatrixModule:
     def matrix_start(self, bot):
-        if os.getenv("TU_APIKEY") is None:
-            return
-        self.api_key = os.getenv("TU_APIKEY")
+        self.api_key = None
         self.calendars = []
+
+        if os.getenv("TU_APIKEY"):
+            self.api_key = os.getenv("TU_APIKEY")
+        else:
+            return
+
         calendars = os.getenv("TU_CALENDARS").split(',')
 
         for calendarstring in calendars:
@@ -28,7 +32,6 @@ class MatrixModule:
             calendar = Calendar(calendardef[0], self.api_key)
             calendar.timestamp = int(time.time())
             calendar.notifyroom = '#' + calendardef[1]
-#            print("Added cal", calendardef[0], calendar.notifyroom)
             self.calendars.append(calendar)
             
         self.bot = bot
@@ -60,6 +63,9 @@ class MatrixModule:
 
     def eventToString(self, event):
         startdt = self.to_datetime(event['start_dt'])
+        if len(event['title']) == 0:
+            event['title'] = '(empty name)'
+
         if(event['delete_dt']):
             s = event['title'] + ' deleted.'
         else:

@@ -38,8 +38,8 @@ class MatrixModule:
             self.credentials_file = os.getenv("GCAL_CREDENTIALS")
         self.live_room = os.getenv("GCAL_LIVE_ROOM")
         self.service = None
-        self.reportTime = 10
-        self.lastReportDate = None
+        self.report_time = 10
+        self.last_report_date = None
 
         creds = None
 
@@ -113,15 +113,14 @@ class MatrixModule:
             pass # Not implemented
         
         today = datetime.datetime.now()
-        sinceLast = 999
-        if self.lastReportDate:
-            sinceLast = (today - self.lastReportDate).hour
-        if sinceLast > 20 and today.hour >= self.reportTime:
-            self.lastReportDate = today
+        since_last = 999
+        if self.last_report_date:
+            since_last = (today - self.last_report_date).total_seconds() / 60 / 60
+        if since_last > 20 and today.hour >= self.report_time:
+            self.last_report_date = today
             events = self.list_today()
             room = bot.get_room(self.live_room)
             self.send_events(events, room)
-
 
     def help(self):
         return('Google calendar. Lists 10 next events by default. today = list today\'s events.')

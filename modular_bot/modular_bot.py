@@ -153,10 +153,11 @@ def run_bot(modules):
     print('Starting modules..')
     # Call matrix_start on each module
     for modulename, moduleobject in modules.items():
-        try:
-            moduleobject.matrix_start(bot)
-        except AttributeError:
-            pass
+        if "matrix_start" in dir(moduleobject):
+            try:
+                moduleobject.matrix_start(bot)
+            except:
+                traceback.print_exc(file=sys.stderr)
 
     # Start polling
     bot.start_polling()
@@ -168,22 +169,22 @@ def run_bot(modules):
     pollcount = 0
     while bot.running:
         for modulename, moduleobject in modules.items():
-            try:
-                moduleobject.matrix_poll(bot, pollcount)
-            except AttributeError:
-                pass
-            except:
-                print('Polling module', modulename, 'failed:')
-                traceback.print_exc(file=sys.stderr)
+            if "matrix_poll" in dir(moduleobject):
+                try:
+                    moduleobject.matrix_poll(bot, pollcount)
+                except:
+                    traceback.print_exc(file=sys.stderr)
+
         time.sleep(10)
         pollcount = pollcount + 1
 
     # Call matrix_stop on each module
     for modulename, moduleobject in modules.items():
-        try:
-            moduleobject.matrix_stop(bot)
-        except AttributeError:
-            pass
+        if "matrix_stop" in dir(moduleobject):
+            try:
+                moduleobject.matrix_stop(bot)
+            except:
+                traceback.print_exc(file=sys.stderr)
 
 def simulate_bot(modules):
     global bot
@@ -194,12 +195,8 @@ def simulate_bot(modules):
     event['content'] = dict()
     event['sender'] = "@console:matrix.org"
     for modulename, moduleobject in modules.items():
-        try:
+        if "matrix_start" in dir(moduleobject):
             moduleobject.matrix_start(bot)
-        except AttributeError:
-            print('matrix_start() not implemented for', modulename)
-#            traceback.print_exc(file=sys.stderr)
-            pass
     line = ''
     print('Simulating bot. Say quit to quit.')
     pollcount = 0
@@ -212,19 +209,21 @@ def simulate_bot(modules):
             modular_callback(room, event)
 
             for modulename, moduleobject in modules.items():
-                try:
-                    moduleobject.matrix_poll(bot, pollcount)
-                except AttributeError:
-                    traceback.print_exc(file=sys.stderr)
+                if "matrix_poll" in dir(moduleobject):
+                    try:
+                        moduleobject.matrix_poll(bot, pollcount)
+                    except:
+                        traceback.print_exc(file=sys.stderr)
 
             pollcount = pollcount + 1
 
     # Call matrix_stop on each module
     for modulename, moduleobject in modules.items():
-        try:
-            moduleobject.matrix_stop(bot)
-        except AttributeError:
-            pass
+        if "matrix_stop" in dir(moduleobject):
+            try:
+                moduleobject.matrix_stop(bot)
+            except:
+                traceback.print_exc(file=sys.stderr)
 
 def main():
     modules = load_modules()
