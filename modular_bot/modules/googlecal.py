@@ -120,7 +120,10 @@ class MatrixModule:
             self.last_report_date = today
             events = self.list_today()
             room = bot.get_room(self.live_room)
-            self.send_events(events, room)
+            if room:
+                self.send_events(events, room)
+            else:
+                print('Cannot find live room object for google cal! Live room is', str(self.live_room))
 
     def help(self):
         return('Google calendar. Lists 10 next events by default. today = list today\'s events.')
