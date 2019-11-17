@@ -10,10 +10,6 @@ services:
     container_name: matrixbot
     image: 'matrixbot:latest'
     build: '.'
-    deploy:
-      restart_policy:
-        condition: any
-        delay: 30s
     networks:
       - default
     environment:
