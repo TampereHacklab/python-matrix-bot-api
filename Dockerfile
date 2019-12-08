@@ -12,5 +12,5 @@ ENV PYTHONPATH=..
 
 WORKDIR /bot/modular_bot
 
-CMD [ "python", "./modular_bot.py" ]
+CMD [ "python", "-u", "./modular_bot.py" ]
 
